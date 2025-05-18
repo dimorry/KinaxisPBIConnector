@@ -10,8 +10,8 @@ encodedCredentials = Binary.ToText(Text.ToBinary(credentials), BinaryEncoding.Ba
 redirect_uri = "https://oauth.powerbi.com/views/oauthredirect.html";
 
 [DataSource.Kind="KinaxisPBIConnector", Publish="KinaxisPBIConnector.Publish"]
-//shared KinaxisPBIConnector.Contents = Value.ReplaceType(KinaxisPBIConnectorImpl, type function (rapid_url as Uri.Type, company_id as text, workbook as text, worksheet as text, l_client_id as text, l_client_secret as text) as any);
-shared KinaxisPBIConnector.Contents = Value.ReplaceType(KinaxisPBIConnectorImpl, type function (rapid_url as Uri.Type) as any);
+shared KinaxisPBIConnector.Contents = Value.ReplaceType(KinaxisPBIConnectorImpl, type function (rapid_url as Uri.Type, company_id as text, workbook as text, worksheet as text) as any);
+//shared KinaxisPBIConnector.Contents = Value.ReplaceType(KinaxisPBIConnectorImpl, type function (rapid_url as Uri.Type) as any);
 
 OAuthRequestHeaders = [
     #"Content-Type" = "application/x-www-form-urlencoded",
@@ -23,8 +23,8 @@ DefaultRequestHeaders = [
     #"Authorization" = Text.Combine({"Bearer ", GetToken()})
 ];
 
-//KinaxisPBIConnectorImpl = (rapid_url as text, company_id as text, workbook as text, worksheet as text, l_client_id as text, l_client_secret as text) =>
-KinaxisPBIConnectorImpl = (rapid_url as text) =>
+KinaxisPBIConnectorImpl = (rapid_url as text, company_id as text, workbook as text, worksheet as text) =>
+//KinaxisPBIConnectorImpl = (rapid_url as text) =>
     let
         source = Web.Contents(rapid_url, [ Headers = DefaultRequestHeaders ]),
         json = Json.Document(source)
@@ -35,24 +35,29 @@ KinaxisPBIConnectorImpl = (rapid_url as text) =>
 KinaxisPBIConnector = [
     Authentication = [
         // Key = [],
-        // UsernamePassword = [],
+        UsernamePassword = [
+            ClientIdLabel = Extension.LoadString("ClientIdLabel"),
+            ClientSecretLabel = Extension.LoadString("ClientSecretLabel")
+            // UsernameLabel = Extension.LoadString("Username"),
+            // PasswordLabel = Extension.LoadString("Password"),
+            // UsernamePasswordLabel = Extension.LoadString("UsernamePassword")
+        ]
         // Windows = [],
         // Anonymous = []
-        OAuth = [
+        /*OAuth = [
             StartLogin = StartLogin,
             FinishLogin = FinishLogin
-        ]
+        ]*/
     ],
-    Label = Extension.LoadString("DataSourceLabel"),
-    redirect_uri = "https://oauth.powerbi.com/views/oauthredirect.html"
+    Label = Extension.LoadString("DataSourceLabel")
+    // redirect_uri = "https://oauth.powerbi.com/views/oauthredirect.html"
 ];
 
 // Data Source UI publishing description
 KinaxisPBIConnector.Publish = [
     Beta = true,
     Category = "Other",
-    //ButtonText = { Extension.LoadString("ButtonTitle"), Extension.LoadString("ButtonHelp") },
-    ButtonText = { "Kinaxis OData", "Kinaxis OData" },
+    ButtonText = { Extension.LoadString("ButtonTitle"), Extension.LoadString("ButtonHelp") },
     LearnMoreUrl = "https://powerbi.microsoft.com/",
     SourceImage = KinaxisPBIConnector.Icons,
     SourceTypeImage = KinaxisPBIConnector.Icons
@@ -63,31 +68,18 @@ KinaxisPBIConnector.Icons = [
     Icon32 = { Extension.Contents("KinaxisPBIConnector32.png"), Extension.Contents("KinaxisPBIConnector40.png"), Extension.Contents("KinaxisPBIConnector48.png"), Extension.Contents("KinaxisPBIConnector64.png") }
 ];
 
-StartLogin = (resourceUrl, state, display) =>
-    let
-        Parts = Uri.Parts(resourceUrl)[Query]
-    in
-        TokenMethod("client_credentials");
-
-FinishLogin = (context, callbackUri, state) =>
-    "Other";
-    // let
-    //     Parts = Uri.Parts(callbackUri)[Query]
-    // in
-    //     TokenMethod(Parts[code]);
-
-TokenMethod = (grant_type) =>
-    let
-        Response = Web.Contents(client_url + "/oauth2/token", [
-            Content = Text.ToBinary(Uri.BuildQueryString([
-                client_id = client_id,
-                client_secret = client_secret,
-                grant_type = grant_type
-                ])),
-            Headers=[#"Content-type" = "application/x-www-form-urlencoded",#"Accept" = "application/json"]]),
-        Parts = Json.Document(Response)
-    in
-        Parts;
+// TokenMethod = (grant_type) =>
+//     let
+//         Response = Web.Contents(client_url + "/oauth2/token", [
+//             Content = Text.ToBinary(Uri.BuildQueryString([
+//                 client_id = client_id,
+//                 client_secret = client_secret,
+//                 grant_type = grant_type
+//                 ])),
+//             Headers=[#"Content-type" = "application/x-www-form-urlencoded",#"Accept" = "application/json"]]),
+//         Parts = Json.Document(Response)
+//     in
+//         Parts;
 
 GetToken = () =>
 let
