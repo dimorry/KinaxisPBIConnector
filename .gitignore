@@ -1,0 +1,28 @@
+# Power BI Custom Connector .gitignore
+
+# Build output
+bin/
+obj/
+*.mez
+
+# User secrets and credentials
+client_id
+client_secret
+client_url
+*.key
+*.pem
+
+# VS Code settings
+.vscode/
+
+# Logs
+*.log
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Backup files
+*.bak
+*.tmp
+~$*
